@@ -28,3 +28,11 @@ def getToken():
     # extract token
     data = json.loads(result.text)
     return data["access_token"]
+
+
+def getSubscriptionId():
+    f = open(os.path.join("local", "resources",
+                          "innovation.credentials.json"), "r")
+    data = f.read()
+    credentials = json.loads(data)
+    return credentials["subscriptionId"]
