@@ -5,7 +5,7 @@ import json
 
 def getToken():
     # get credentials
-    f = open(os.path.join("local", "resources",
+    f = open(os.path.join("local", "config",
                           "innovation.credentials.json"), "r")
     credentials = json.loads(f.read())
     # prepare headers
@@ -31,7 +31,7 @@ def getToken():
 
 
 def getSubscriptionId():
-    f = open(os.path.join("local", "resources",
+    f = open(os.path.join("local", "config",
                           "innovation.credentials.json"), "r")
     data = f.read()
     credentials = json.loads(data)

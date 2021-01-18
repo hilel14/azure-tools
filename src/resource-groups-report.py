@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import csv
-import credentials
+from sheba.arc import credentials
 
 
 def getResourceGroups(token, subscriptionId):
@@ -21,10 +21,11 @@ def getResourceGroups(token, subscriptionId):
 
 
 def saveToCsv(data):
-    with open(os.path.join("local", "data", "out", "cost-report.csv"), mode='w', newline='\n', encoding='utf-8') as outFile:
+    path = os.path.join("local", "data", "out", "resource-groups-report.csv")
+    with open(path, mode='w', newline='\n', encoding='utf-8') as outFile:
         # writer = csv.writer(outFile, delimiter=',',quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer = csv.writer(outFile)
-        writer.writerow(["group", "application", "cost"])
+        writer.writerow(["group", "application"])
         for group in data["value"]:
             name = group["name"]
             description = "?"
@@ -32,7 +33,7 @@ def saveToCsv(data):
                 tags = group["tags"]
                 if "Application" in tags:
                     description = tags["Application"]
-            writer.writerow([name, description, 0])
+            writer.writerow([name, description])
 
 
 token = credentials.getToken()
