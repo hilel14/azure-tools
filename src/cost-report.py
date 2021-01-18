@@ -8,6 +8,21 @@ import requests
 from sheba.arc import credentials
 
 
+def getResourceGroups(subscriptionId, token):
+    # Build url
+    myUrl = "https://management.azure.com/subscriptions/" + \
+        subscriptionId+"/resourcegroups?api-version=2020-06-01"
+    # prepare headers
+    myHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer " + token
+    }
+    # send request
+    result = requests.get(myUrl, headers=myHeaders)
+    data = json.loads(result.text)
+    return data
+
+
 def loadBody(fileName):
     # Read request body from json file
     dirname = os.path.dirname(__file__)
@@ -18,7 +33,7 @@ def loadBody(fileName):
     return json.loads(s)
 
 
-def getData(subscriptionId, token, body):
+def getCost(subscriptionId, token, body):
     myHeaders = {
         'Content-Type': 'application/json',
         'Authorization': "Bearer " + token
@@ -32,6 +47,25 @@ def getData(subscriptionId, token, body):
     result = requests.post(myUrl, data=myBody, headers=myHeaders)
     result = json.loads(result.text)
     return result
+
+
+def buildReport(groups, cost):
+    rows = cost["properties"]["rows"]
+    for row in rows:
+        description = getDecription(row[1], groups)
+        row.append(description)
+    return rows
+
+
+def getDecription(groupName, groups):
+    description = "?"
+    for group in groups["value"]:
+        if group["name"] == groupName:
+            if "tags" in group:
+                tags = group["tags"]
+                if "Application" in tags:
+                    description = tags["Application"]
+    return description
 
 
 def saveJson(data, fileName):
@@ -48,6 +82,7 @@ def saveCsv(rows, fileName):
     print("saving " + path)
     with open(path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
+        writer.writerow(["Cost", "Resource Group", "Currency", "Description"])
         for row in rows:
             writer.writerow(row)
 
@@ -55,6 +90,8 @@ def saveCsv(rows, fileName):
 subscriptionId = credentials.getSubscriptionId()
 token = credentials.getToken()
 body = loadBody("SubscriptionQueryGrouping-Legacy")
-result = getData(subscriptionId, token, body)
-# saveJson(result, "cost-report")
-saveCsv(result["properties"]["rows"], "cost-report")
+groups = getResourceGroups(subscriptionId, token)
+cost = getCost(subscriptionId, token, body)
+# saveJson(cost, "cost-report")
+report = buildReport(groups, cost)
+saveCsv(report, "cost-report")
